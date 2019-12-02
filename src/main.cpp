@@ -1,7 +1,8 @@
 #include <iostream>
+#include "graph.h"
 
 int main()
 {
-    std::cout << "CPE400" << std::endl;
-    return 0;
+	Graph g(5);
+	std::cout << g;
 }
