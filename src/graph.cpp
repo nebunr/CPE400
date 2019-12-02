@@ -1,6 +1,8 @@
 #include "graph.h"
 
 Graph::Graph(int n){
+	//seed the RNG
+	srand(time(NULL));
 	//set number_nodes to n
 	number_nodes = n;
 	//allocate memory for energy_array
@@ -16,6 +18,10 @@ Graph::Graph(int n){
 			adjacency_matrix[i][j] = -1;
 		}
 	}
+	//initialize the energy matrix, each node has a random energy 10-20
+	for(int i = 0; i < number_nodes; i++){
+		energy_array[i] = rand() % 10 + 10;
+	}	
 }
 
 //Add a path from a to b with a cost
