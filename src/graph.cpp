@@ -62,6 +62,24 @@ int* Graph::GetEnergyArray(){
 	return energy_array;
 }
 
+//Updates the energy array according to the cost of travelling from a to b
+void Graph::Travel(int a, int b){
+	int cost = adjacency_matrix[a][b];
+	if(cost > energy_array[a]){
+		throw std::logic_error("Cost of travelling is larger than energy in node");
+	}
+	if(cost < 0){
+		throw std::logic_error("No path from a to b");
+	}
+	energy_array[a] -= cost;
+}
+
+//Takes an array of integers indicating the path taken and updates the adjacency matrix
+void Graph::TravelPath(std::vector<std::pair<int,int>> path){
+	for(int i = 0; i < path.size(); i++){
+		Travel(std::get<0>(path[i]),std::get<1>(path[i]));
+	}
+}
 //Print out the Graph
 std::ostream& operator<<(std::ostream& os, Graph g){
 	int number_nodes = g.GetNumberNodes();
