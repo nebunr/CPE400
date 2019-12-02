@@ -6,11 +6,13 @@
 
 class Graph{
 	public:
-		Graph::Graph(int n);
+		Graph(int n);
 		void AddPath(int a, int b, int cost);
-		void GetCost(int a, int b);
+		int GetCost(int a, int b);
 		int GetEnergy(int a);
 		int GetNumberNodes();
+		int** GetAdjacencyMatrix();
+		int* GetEnergyArray();
 		friend std::ostream& operator<<(std::ostream& os, Graph g);
 
 	private:
