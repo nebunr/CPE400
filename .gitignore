@@ -25,6 +25,7 @@
 *.exe
 *.out
 *.app
+cpe
 
 # Folders
 build/
