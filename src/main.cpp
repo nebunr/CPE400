@@ -1,22 +1,27 @@
 #include <iostream>
 #include "graph.h"
 
-int test();
+std::pair<int,int> test();
 
 int main()
 {
 	srand(time(NULL));
-	int sum = 0;
-	int num_tests = 1;
+	int sumrip = 0;
+	int sumripbfs = 0;
+	int num_tests = 1000;
 	for(int i = 0; i < num_tests; i++){
-		sum += test();
+		std::pair<int,int> test_result = test();
+		if(test_result.first > 0){ std::cout << "RIP SUCCEEDED" << std::endl; return 0;}
+		sumrip += test_result.first;
+		sumripbfs += test_result.second;	
 	}
-	std::cout << "Average Packets Sent: "<< (float)sum/(float)num_tests << std::endl;
+	std::cout << "Average packets sent using RIP: " << (float)sumrip/(float)num_tests << std::endl;
+	std::cout << "Average packets sent using RIPBFS: " << (float)sumripbfs/(float)num_tests << std::endl;
 }
 
-int test(){
+std::pair<int,int> test(){
 	int number_nodes = 20;
-	Graph g(number_nodes);
+	Graph grip(number_nodes);
 
 	// Make random network each time
 	for(int i = 0; i < number_nodes; i++)
@@ -31,17 +36,19 @@ int test(){
 
 			// Make sure that the new link makes a path
 			// Also make sure that there doesn't already exist a path
-			while(newLink == i && (g.GetCost(i, newLink) != -1))
+			while(newLink == i && (grip.GetCost(i, newLink) != -1))
 			{
 				newLink = rand() % (number_nodes-1);
 			}
 
-			g.AddPath(i, newLink, cost);
-			g.AddPath(newLink, i, cost);
+			grip.AddPath(i, newLink, cost);
+			grip.AddPath(newLink, i, cost);
 		}
 	}
-	std::cout << g;
-	while(g.run()){ }
-	return g.GetPacketsSent();
+	Graph gripbfs(grip.GetNumberNodes(),grip.GetAdjacencyMatrix(),grip.GetEnergyArray());
+	while(grip.runRIP()){ }
+	while(gripbfs.runRIPBFS()){ }
+	return std::make_pair(grip.GetPacketsSent(),gripbfs.GetPacketsSent());
+
 
 }
