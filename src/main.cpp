@@ -1,43 +1,47 @@
 #include <iostream>
 #include "graph.h"
 
+int test();
+
 int main()
 {
 	srand(time(NULL));
+	int sum = 0;
+	int num_tests = 1;
+	for(int i = 0; i < num_tests; i++){
+		sum += test();
+	}
+	std::cout << "Average Packets Sent: "<< (float)sum/(float)num_tests << std::endl;
+}
 
-	Graph g(5);
+int test(){
+	int number_nodes = 20;
+	Graph g(number_nodes);
 
 	// Make random network each time
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < number_nodes; i++)
 	{
-		int numLink = rand() % 4 + 1;
+		int numLink = rand() % (number_nodes - 1) + 1;
 		int newLink;
 
 		for(int j = 0; j < numLink; j++)
 		{
-			int cost = rand() % 5 + 1;
-			newLink = rand() % 4;
+			int cost = rand() % number_nodes + 1;
+			newLink = rand() % (number_nodes-1);
 
 			// Make sure that the new link makes a path
 			// Also make sure that there doesn't already exist a path
 			while(newLink == i && (g.GetCost(i, newLink) != -1))
 			{
-				newLink = rand() % 4;
+				newLink = rand() % (number_nodes-1);
 			}
 
 			g.AddPath(i, newLink, cost);
 			g.AddPath(newLink, i, cost);
 		}
 	}
+	std::cout << g;
+	while(g.run()){ }
+	return g.GetPacketsSent();
 
-	// run simulation
-	// while there are no errors, do dsr and travel
-	// if errors, stop simulation and print end simulation
-	std::cout << "Start simulation" << std::endl << std::endl;
-
-	std::cout << g << std::endl;
-
-	while(g.run()) {	}
-
-	std::cout << "End simulation" << std::endl;
 }

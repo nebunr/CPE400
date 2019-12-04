@@ -16,13 +16,16 @@ class Graph{
 		int** GetAdjacencyMatrix();
 		int* GetEnergyArray();
 		bool RIP(int src, int dest);
+		bool RIPBFS(int src, int dest);
 		bool Travel(int a, int b);
 		bool TravelPath(std::vector<std::pair<int,int>> path);
 		friend std::ostream& operator<<(std::ostream& os, Graph g);
 		bool run();
 		bool CheckEnergy();
+		int GetPacketsSent();
 
 	private:
+		int packet_count;
 		int** adjacency_matrix;
 		int* energy_array;
 		int number_nodes;

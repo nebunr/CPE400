@@ -1,8 +1,6 @@
 #include "graph.h"
 
 Graph::Graph(int n){
-	//seed the RNG
-	srand(time(NULL));
 	//set number_nodes to n
 	number_nodes = n;
 	//allocate memory for energy_array
@@ -27,8 +25,9 @@ Graph::Graph(int n){
 	}
 	//initialize the energy matrix, each node has a random energy 10-20
 	for(int i = 0; i < number_nodes; i++){
-		energy_array[i] = rand() % 10 + 20;
-	}	
+		energy_array[i] = rand() % 100 + 100;
+	}
+	packet_count = 1;	
 }
 
 //Add a path from a to b with a cost
@@ -119,6 +118,7 @@ std::ostream& operator<<(std::ostream& os, Graph g){
 // does the dsr protocol, but without waiting for travel
 bool Graph::RIP(int src, int dest)
 {
+	int max_hops = 15;
 	for(int i = 0; i < number_nodes; i++)
 	{
 		shortestPath[src][i].clear();
@@ -162,6 +162,63 @@ bool Graph::RIP(int src, int dest)
 
 		links.pop();
 	}
+	
+	if(dist[dest] == 1000000)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+
+// does the dsr protocol, but without waiting for travel
+bool Graph::RIPBFS(int src, int dest)
+{
+	for(int i = 0; i < number_nodes; i++)
+	{
+		shortestPath[src][i].clear();
+	}
+
+	std::queue<int> links;
+	bool isVisited[number_nodes];
+	int dist[number_nodes];
+
+	for(int i = 0; i < number_nodes; i++)
+	{
+		dist[i] = 1000000;
+		isVisited[i] = false;
+	}
+
+	dist[src] = 0;
+	links.push(src);
+	isVisited[src] = true;
+
+	while(!links.empty())
+	{
+		for(int i = 0; i < number_nodes; i++)
+		{
+			if(adjacency_matrix[links.front()][i] > 0 && isVisited[i] == false)
+			{
+				if(dist[i] > dist[links.front()] + adjacency_matrix[links.front()][i])
+				{
+					dist[i] = dist[links.front()] + adjacency_matrix[links.front()][i];
+					std::pair<int,int> newPair = {links.front(), i};
+
+					if(!shortestPath[src][links.front()].empty())				
+						shortestPath[src][i] = shortestPath[src][links.front()];
+
+					shortestPath[src][i].push_back(newPair);
+
+					isVisited[i] = true;
+					links.push(i);
+				}
+			}
+		}
+
+		links.pop();
+	}
+	
 
 	if(dist[dest] == 1000000)
 	{
@@ -170,6 +227,8 @@ bool Graph::RIP(int src, int dest)
 
 	return true;
 }
+
+
 
 // sees if all the nodes are dead
 bool Graph::CheckEnergy()
@@ -197,21 +256,21 @@ bool Graph::CheckEnergy()
 // run the simulation
 bool Graph::run()
 {
-	int src = rand() % 5;
-	int dest = rand() % 5;
+	int src = rand() % number_nodes;
+	int dest = rand() %  number_nodes;
 
 	while(adjacency_matrix[src][src] != 0)
 	{
-		src = rand() % 5;
+		src = rand() % number_nodes;
 	}
 
 	while (src == dest)
 	{
-		dest = rand() % 5;
+		dest = rand() % number_nodes;
 	}
 
 	// Look for shortest path and travel that
-	if(RIP(src, dest))
+	if(RIPBFS(src, dest))
 	{
 		if(!TravelPath(shortestPath[src][dest]))
 		{
@@ -221,18 +280,23 @@ bool Graph::run()
 	else
 	{
 		std::cout << "No path from a to b." << std::endl;
+		return false;
 	}
-
+	std::cout << "Packet: " << packet_count << std::endl;
+	packet_count++;
 	std::cout << "Source: " << src << std::endl;
 	std::cout << "Destination: " << dest << std::endl;
-	std::cout << "Route taken: ";
-	for(unsigned int i = 0; i < shortestPath[src][dest].size(); i++)
+	std::cout << "Route taken: " << src << "->";
+	for(unsigned int i = 0; i < shortestPath[src][dest].size()-1; i++)
 	{
-		std::cout << shortestPath[src][dest][i].second << " ";
+		std::cout << shortestPath[src][dest][i].second << "->";
 	}
-	std::cout << std::endl;
-	std::cout << *this << std::endl;
-
+	std::cout << shortestPath[src][dest][shortestPath[src][dest].size()-1].second << std::endl;
+	std::cout << "Energy Array: [";
+	for(int i = 0; i < number_nodes-1; i++){
+		std::cout << energy_array[i] << ", ";
+	}
+	std::cout << energy_array[number_nodes-1] << "]\n";
 	// Kill the sensors without energy
 	if(!CheckEnergy())
 	{
@@ -240,4 +304,8 @@ bool Graph::run()
 	}
 
 	return true;
+}
+
+int Graph::GetPacketsSent(){
+	return packet_count-1;
 }
