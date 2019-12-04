@@ -144,8 +144,7 @@ bool Graph::RIP(int src, int dest)
 		{
 			if(adjacency_matrix[links.front()][i] > 0 && isVisited[i] == false)
 			{
-				links.push(i);
-				if(dist[i] < dist[links.front()] + adjacency_matrix[links.front()][i])
+				if(dist[i] > dist[links.front()] + adjacency_matrix[links.front()][i])
 				{
 					dist[i] = dist[links.front()] + adjacency_matrix[links.front()][i];
 					std::pair<int,int> newPair = {links.front(), i};
@@ -156,6 +155,7 @@ bool Graph::RIP(int src, int dest)
 					shortestPath[src][i].push_back(newPair);
 
 					isVisited[i] = true;
+					links.push(i);
 				}
 			}
 		}
