@@ -118,49 +118,43 @@ std::ostream& operator<<(std::ostream& os, Graph g){
 // does the dsr protocol, but without waiting for travel
 bool Graph::RIP(int src, int dest)
 {
-	int max_hops = 15;
 	for(int i = 0; i < number_nodes; i++)
 	{
 		shortestPath[src][i].clear();
 	}
 
-	std::queue<int> links;
-	bool isVisited[number_nodes];
+	int MAX_HOPS = 15;
 	int dist[number_nodes];
+	int j = 0;
+	int currentNode = src;
 
 	for(int i = 0; i < number_nodes; i++)
 	{
 		dist[i] = 1000000;
-		isVisited[i] = false;
 	}
 
 	dist[src] = 0;
-	links.push(src);
-	isVisited[src] = true;
 
-	while(!links.empty())
+	while(j < MAX_HOPS)
 	{
 		for(int i = 0; i < number_nodes; i++)
 		{
-			if(adjacency_matrix[links.front()][i] > 0 && isVisited[i] == false)
+			if(adjacency_matrix[currentNode][i] > 0)
 			{
-				if(dist[i] > dist[links.front()] + adjacency_matrix[links.front()][i])
+				if(dist[i] > dist[currentNode] + adjacency_matrix[currentNode][i])
 				{
-					dist[i] = dist[links.front()] + adjacency_matrix[links.front()][i];
-					std::pair<int,int> newPair = {links.front(), i};
+					dist[i] = dist[currentNode] + adjacency_matrix[currentNode][i];
+					std::pair<int,int> newPair = {currentNode, i};
 
-					if(!shortestPath[src][links.front()].empty())				
-						shortestPath[src][i] = shortestPath[src][links.front()];
+					if(!shortestPath[src][currentNode].empty())				
+						shortestPath[src][i] = shortestPath[src][currentNode];
 
 					shortestPath[src][i].push_back(newPair);
 
-					isVisited[i] = true;
-					links.push(i);
+					j++;
 				}
 			}
 		}
-
-		links.pop();
 	}
 	
 	if(dist[dest] == 1000000)
@@ -170,7 +164,6 @@ bool Graph::RIP(int src, int dest)
 
 	return true;
 }
-
 
 // does the dsr protocol, but without waiting for travel
 bool Graph::RIPBFS(int src, int dest)
