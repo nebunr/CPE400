@@ -119,6 +119,11 @@ std::ostream& operator<<(std::ostream& os, Graph g){
 // does the dsr protocol, but without waiting for travel
 bool Graph::RIP(int src, int dest)
 {
+	for(int i = 0; i < number_nodes; i++)
+	{
+		shortestPath[src][i].clear();
+	}
+
 	std::queue<int> links;
 	bool isVisited[number_nodes];
 	int dist[number_nodes];
@@ -144,8 +149,9 @@ bool Graph::RIP(int src, int dest)
 				{
 					dist[i] = dist[links.front()] + adjacency_matrix[links.front()][i];
 					std::pair<int,int> newPair = {links.front(), i};
-										
-					shortestPath[src][i] = shortestPath[src][links.front()];
+
+					if(!shortestPath[src][links.front()].empty())				
+						shortestPath[src][i] = shortestPath[src][links.front()];
 
 					shortestPath[src][i].push_back(newPair);
 
@@ -219,6 +225,12 @@ bool Graph::run()
 
 	std::cout << "Source: " << src << std::endl;
 	std::cout << "Destination: " << dest << std::endl;
+	std::cout << "Route taken: ";
+	for(unsigned int i = 0; i < shortestPath[src][dest].size(); i++)
+	{
+		std::cout << shortestPath[src][dest][i].second << " ";
+	}
+	std::cout << std::endl;
 	std::cout << *this << std::endl;
 
 	// Kill the sensors without energy
