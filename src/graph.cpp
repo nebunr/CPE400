@@ -150,9 +150,9 @@ bool Graph::RIP(int src, int dest)
 						shortestPath[src][i] = shortestPath[src][currentNode];
 
 					shortestPath[src][i].push_back(newPair);
-
-					j++;
 				}
+				j++;
+				currentNode = i;
 			}
 		}
 	}
@@ -263,7 +263,7 @@ bool Graph::run()
 	}
 
 	// Look for shortest path and travel that
-	if(RIPBFS(src, dest))
+	if(RIP(src,dest))//RIPBFS(src, dest))
 	{
 		if(!TravelPath(shortestPath[src][dest]))
 		{
