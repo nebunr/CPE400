@@ -15,6 +15,9 @@ Create and simulate a sensor network. The objective is to increase the longevity
 ## Build Instructions
 This is a C++ project using a makefile. You can build, using following command:
 ```bash
+mkdir build
+cp makefile build
+cd build
 make
 ```
 

@@ -7,6 +7,12 @@ Graph::Graph(int n){
 	number_nodes = n;
 	//allocate memory for energy_array
 	energy_array = new int[number_nodes];
+	//allocate memory for shortestPath matrix
+	shortestPath = new std::vector<std::pair<int,int>>*[number_nodes];
+	for(int i = 0; i < number_nodes; i++)
+	{
+		shortestPath[i] = new std::vector<std::pair<int,int>>[number_nodes];
+	}
 	//allocate memory for adjacency matrix
 	adjacency_matrix = new int*[number_nodes];
 	for(int i = 0; i < number_nodes; i++){
@@ -17,10 +23,11 @@ Graph::Graph(int n){
 		for(int j = 0; j < number_nodes; j++){
 			adjacency_matrix[i][j] = -1;
 		}
+		adjacency_matrix[i][i] = 0;
 	}
 	//initialize the energy matrix, each node has a random energy 10-20
 	for(int i = 0; i < number_nodes; i++){
-		energy_array[i] = rand() % 10 + 10;
+		energy_array[i] = rand() % 10 + 20;
 	}	
 }
 
@@ -63,25 +70,34 @@ int* Graph::GetEnergyArray(){
 }
 
 //Updates the energy array according to the cost of travelling from a to b
-void Graph::Travel(int a, int b){
+bool Graph::Travel(int a, int b){
 	int cost = adjacency_matrix[a][b];
 	if(cost > energy_array[a]){
-		throw std::logic_error("Cost of travelling is larger than energy in node");
+		std::cout << "Cost of travelling is larger than energy in node" << std::endl;
+		return false;
 	}
 	if(cost < 0){
-		throw std::logic_error("No path from a to b");
+		std::cout << "No path from a to b" << std::endl;
+		return false;
 	}
 	energy_array[a] -= cost;
+	return true;
 }
 
 //Takes an array of integers indicating the path taken and updates the adjacency matrix
-void Graph::TravelPath(std::vector<std::pair<int,int>> path){
-	for(int i = 0; i < path.size(); i++){
-		Travel(std::get<0>(path[i]),std::get<1>(path[i]));
+bool Graph::TravelPath(std::vector<std::pair<int,int>> path){
+	for(unsigned int i = 0; i < path.size(); i++){
+		if(!Travel(std::get<0>(path[i]),std::get<1>(path[i])))
+		{
+			return false;
+		}
 	}
+
+	return true;
 }
+
 //Print out the Graph
-std::ostream& operator<<(std::ostream& os, Graph g){
+std::ostream& operator<<(std::ostream& os, Graph g){	
 	int number_nodes = g.GetNumberNodes();
 	int* energy_array = g.GetEnergyArray();
 	int** adjacency_matrix = g.GetAdjacencyMatrix();
@@ -93,10 +109,123 @@ std::ostream& operator<<(std::ostream& os, Graph g){
 	os << "Adjacency Matrix:\n";
 	for(int i = 0; i < number_nodes; i++){
 		for(int j = 0; j < number_nodes; j++){
-			os << adjacency_matrix[i][j];
+			os << adjacency_matrix[i][j] << " ";
 		}
 		os << "\n";
 	}
 	return os;
 }
 
+// does the dsr protocol, but without waiting for travel
+bool Graph::RIP(int src, int dest)
+{
+	std::queue<int> links;
+	bool isVisited[number_nodes];
+	int dist[number_nodes];
+
+	for(int i = 0; i < number_nodes; i++)
+	{
+		dist[i] = 1000000;
+		isVisited[i] = false;
+	}
+
+	dist[src] = 0;
+	links.push(src);
+	isVisited[src] = true;
+
+	while(!links.empty())
+	{
+		for(int i = 0; i < number_nodes; i++)
+		{
+			if(adjacency_matrix[links.front()][i] > 0 && isVisited[i] == false)
+			{
+				links.push(i);
+				if(dist[i] < dist[links.front()] + adjacency_matrix[links.front()][i])
+				{
+					dist[i] = dist[links.front()] + adjacency_matrix[links.front()][i];
+					std::pair<int,int> newPair = {links.front(), i};
+										
+					shortestPath[src][i] = shortestPath[src][links.front()];
+
+					shortestPath[src][i].push_back(newPair);
+
+					isVisited[i] = true;
+				}
+			}
+		}
+
+		links.pop();
+	}
+
+	if(dist[dest] == 1000000)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+// sees if all the nodes are dead
+bool Graph::CheckEnergy()
+{
+	bool notDone = false;
+
+	for(int i = 0; i < number_nodes; i++)
+	{
+		if(energy_array[i] > 0)
+		{
+			notDone = true;
+		}
+		else
+		{
+			for(int j = 0; j < number_nodes; j++)
+			{
+				adjacency_matrix[i][j] = -1;
+			}
+		}
+	}
+
+	return notDone;
+}
+
+// run the simulation
+bool Graph::run()
+{
+	int src = rand() % 5;
+	int dest = rand() % 5;
+
+	while(adjacency_matrix[src][src] != 0)
+	{
+		src = rand() % 5;
+	}
+
+	while (src == dest)
+	{
+		dest = rand() % 5;
+	}
+
+	// Look for shortest path and travel that
+	if(RIP(src, dest))
+	{
+		if(!TravelPath(shortestPath[src][dest]))
+		{
+			return false;
+		}
+	}
+	else
+	{
+		std::cout << "No path from a to b." << std::endl;
+	}
+
+	std::cout << "Source: " << src << std::endl;
+	std::cout << "Destination: " << dest << std::endl;
+	std::cout << *this << std::endl;
+
+	// Kill the sensors without energy
+	if(!CheckEnergy())
+	{
+		return false;
+	}
+
+	return true;
+}
