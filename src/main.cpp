@@ -1,4 +1,3 @@
-#include <iostream>
 #include "graph.h"
 
 std::pair<int,int> test();
@@ -8,7 +7,7 @@ int main()
 	// Seed randomness
 	srand(time(NULL));
 	
-	//Declare and initialize
+	// Declare and initialize
 	int sumrip = 0;
 	int sumripbfs = 0;
 	int num_tests = 1000;
@@ -68,6 +67,5 @@ std::pair<int,int> test(){
 
 	// Return the packets sent by both simulations
 	return std::make_pair(grip.GetPacketsSent(),gripbfs.GetPacketsSent());
-
 
 }
