@@ -7,6 +7,9 @@
 #include <queue>
 #include <stdlib.h>
 
+// Graph is a class that holds the network for simulation testing. 
+// Node cost, energy, amount, travel algorithms, as well as the RIP 
+// algoriths can be found here. 
 class Graph{
 	public:
 		Graph(int n);
@@ -35,6 +38,4 @@ class Graph{
 		std::vector<std::pair<int,int>> **shortestPath;
 };
 
-
 #endif //GRAPH_H
-

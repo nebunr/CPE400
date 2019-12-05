@@ -13,21 +13,23 @@ int main()
 	int num_tests = 1000;
 
 	// Run the tests num_tests amount of times
-	for(int i = 0; i < num_tests; i++){
+	for(int i = 0; i < num_tests; i++)
+	{
 		std::pair<int,int> test_result = test();
 		if(test_result.first > 0){ std::cout << "RIP SUCCEEDED" << std::endl; return 0;}
 		sumrip += test_result.first;
 		sumripbfs += test_result.second;	
 	}
 
-	// Print out how many packets were sent using the standard rip protocol and the modified
-	// rip protocol
+	// Print out how many packets were sent using the standard rip protocol and
+	// the modified rip protocol
 	std::cout << "Average packets sent using RIP: " << (float)sumrip/(float)num_tests << std::endl;
 	std::cout << "Average packets sent using RIPBFS: " << (float)sumripbfs/(float)num_tests << std::endl;
 }
 
 // The test function
-std::pair<int,int> test(){
+std::pair<int,int> test()
+{
 	// Declare and initialize
 	int number_nodes = 20;
 	// Make a graph for running rip
@@ -67,5 +69,4 @@ std::pair<int,int> test(){
 
 	// Return the packets sent by both simulations
 	return std::make_pair(grip.GetPacketsSent(),gripbfs.GetPacketsSent());
-
 }
