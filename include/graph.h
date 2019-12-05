@@ -2,9 +2,10 @@
 #define GRPAH_H
 
 #include <iostream>
+#include <vector>
+#include <utility>
 #include <queue>
 #include <stdlib.h>
-#include "request.h"
 
 class Graph{
 	public:

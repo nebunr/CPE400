@@ -71,14 +71,17 @@ int* Graph::GetEnergyArray(){
 //Updates the energy array according to the cost of travelling from a to b
 bool Graph::Travel(int a, int b){
 	int cost = adjacency_matrix[a][b];
+	// If there isnt enough energy, return false to end simulation
 	if(cost > energy_array[a]){
 		std::cout << "Cost of travelling is larger than energy in node" << std::endl;
 		return false;
 	}
+	// If there is no path that exists, return false to end simulation
 	if(cost < 0){
 		std::cout << "No path from a to b" << std::endl;
 		return false;
 	}
+	// If no errors, update energy_array and return true
 	energy_array[a] -= cost;
 	return true;
 }
@@ -86,6 +89,7 @@ bool Graph::Travel(int a, int b){
 //Takes an array of integers indicating the path taken and updates the adjacency matrix
 bool Graph::TravelPath(std::vector<std::pair<int,int>> path){
 	for(unsigned int i = 0; i < path.size(); i++){
+		// If travel cannot happen, return false
 		if(!Travel(std::get<0>(path[i]),std::get<1>(path[i])))
 		{
 			return false;
@@ -95,7 +99,7 @@ bool Graph::TravelPath(std::vector<std::pair<int,int>> path){
 	return true;
 }
 
-//Print out the Graph
+//Print out the adjacency matrix and energy array
 std::ostream& operator<<(std::ostream& os, Graph g){	
 	int number_nodes = g.GetNumberNodes();
 	int* energy_array = g.GetEnergyArray();
@@ -115,48 +119,62 @@ std::ostream& operator<<(std::ostream& os, Graph g){
 	return os;
 }
 
-// does the dsr protocol, but without waiting for travel
+// does the rip protocol, but without waiting for travel
 bool Graph::RIP(int src, int dest)
 {
+	// Clear all shortest paths from source to all nodes
 	for(int i = 0; i < number_nodes; i++)
 	{
 		shortestPath[src][i].clear();
 	}
 
+	// Declaration and initializiation
 	int MAX_HOPS = 15;
 	int dist[number_nodes];
 	int j = 0;
 	int currentNode = src;
 
+	// Set up the dist array for Bellman-Ford algorithm
 	for(int i = 0; i < number_nodes; i++)
 	{
 		dist[i] = 1000000;
 	}
-
 	dist[src] = 0;
 
+	// Do MAX_HOPS amount of hops before continuing
 	while(j < MAX_HOPS)
 	{
+		// Loop through rows of adjacency_matrix
 		for(int i = 0; i < number_nodes; i++)
 		{
+			// If the current node and the row have an edge between them, do the following
 			if(adjacency_matrix[currentNode][i] > 0)
 			{
+				// Relax the dist array if needed
 				if(dist[i] > dist[currentNode] + adjacency_matrix[currentNode][i])
 				{
 					dist[i] = dist[currentNode] + adjacency_matrix[currentNode][i];
+					
+					// Create a new pair between to update the shortest path
 					std::pair<int,int> newPair = {currentNode, i};
 
+					// If the shortest path is adding onto an already existing shortest path,
+					// make sure the shortest path between src and i is the same as shortest path
+					// between src and current node before continuing
 					if(!shortestPath[src][currentNode].empty())				
 						shortestPath[src][i] = shortestPath[src][currentNode];
 
+					// update shortest path
 					shortestPath[src][i].push_back(newPair);
 				}
+				// Loop through hops and update current node
 				j++;
 				currentNode = i;
 			}
 		}
 	}
-	
+
+	// Check if a solution was found. If not, return false
 	if(dist[dest] == 1000000)
 	{
 		return false;
@@ -165,54 +183,73 @@ bool Graph::RIP(int src, int dest)
 	return true;
 }
 
-// does the dsr protocol, but without waiting for travel
+// does the rip protocol, but without waiting for travel
+// Also adds Breadth First Search algorithm
 bool Graph::RIPBFS(int src, int dest)
 {
+	// Clear the shortestPath from source to all nodes
 	for(int i = 0; i < number_nodes; i++)
 	{
 		shortestPath[src][i].clear();
 	}
 
+	// Create a queue of links and a boolean array for visited nodes
+	// This is for BFS
 	std::queue<int> links;
 	bool isVisited[number_nodes];
+	// Bellman-Ford dist array created and initialized
 	int dist[number_nodes];
 
 	for(int i = 0; i < number_nodes; i++)
 	{
 		dist[i] = 1000000;
+		// Remember, all nodes haven't been visited
 		isVisited[i] = false;
 	}
 
+	// Initialize the first step of the protocol
 	dist[src] = 0;
 	links.push(src);
 	isVisited[src] = true;
 
+	// Loop until queue is empty (all nodes have been visited that can be visited)
 	while(!links.empty())
 	{
+		// Loop through rows of adjacency matrix
 		for(int i = 0; i < number_nodes; i++)
 		{
+			// Make sure there is a path between current node and the next node
+			// Also make sure the next node hasn't already been visited
 			if(adjacency_matrix[links.front()][i] > 0 && isVisited[i] == false)
 			{
+				// Relax the dist array if needed
 				if(dist[i] > dist[links.front()] + adjacency_matrix[links.front()][i])
 				{
 					dist[i] = dist[links.front()] + adjacency_matrix[links.front()][i];
+
+					// Create a new pair between to update the shortest path					
 					std::pair<int,int> newPair = {links.front(), i};
 
+					// If the shortest path is adding onto an already existing shortest path,
+					// make sure the shortest path between src and i is the same as shortest path
+					// between src and current node before continuing
 					if(!shortestPath[src][links.front()].empty())				
 						shortestPath[src][i] = shortestPath[src][links.front()];
 
+					// Update shortest path 
 					shortestPath[src][i].push_back(newPair);
 
+					// Mark next node as visited and push it to the queue
 					isVisited[i] = true;
 					links.push(i);
 				}
 			}
 		}
-
+		// Make sure you clean the nodes already visited from the queue
 		links.pop();
 	}
 	
-
+	// Check to make sure there is a path from src to dest. If not return false
 	if(dist[dest] == 1000000)
 	{
 		return false;
@@ -230,12 +267,14 @@ bool Graph::CheckEnergy()
 
 	for(int i = 0; i < number_nodes; i++)
 	{
+		// If at leasy one energy array is alive, all nodes aren't dead
 		if(energy_array[i] > 0)
 		{
 			notDone = true;
 		}
 		else
 		{
+			// If the node is dead, kill the node's paths
 			for(int j = 0; j < number_nodes; j++)
 			{
 				adjacency_matrix[i][j] = -1;
@@ -249,32 +288,41 @@ bool Graph::CheckEnergy()
 // run the simulation
 bool Graph::run()
 {
+	// Randomly generate src and dest
 	int src = rand() % number_nodes;
 	int dest = rand() %  number_nodes;
 
+	// If the node is dead, generate another src
 	while(adjacency_matrix[src][src] != 0)
 	{
 		src = rand() % number_nodes;
 	}
 
+	// If the src and dest is the same, generate another dest
 	while (src == dest)
 	{
 		dest = rand() % number_nodes;
 	}
 
 	// Look for shortest path and travel that
-	if(RIP(src,dest))//RIPBFS(src, dest))
+	// Use RIPBFS for best results
+	// Use RIP for the usual protocol
+	if(RIPBFS(src, dest))
 	{
+		// Travel that path if RIPBFS succeeds
 		if(!TravelPath(shortestPath[src][dest]))
 		{
+			// If travel doesn't succeed, return false and end simulation
 			return false;
 		}
 	}
 	else
 	{
+		// If the RIPBFS failed, there isn't a path that exists from a to b
 		std::cout << "No path from a to b." << std::endl;
 		return false;
 	}
+	// Print information from the simulation
 	std::cout << "Packet: " << packet_count << std::endl;
 	packet_count++;
 	std::cout << "Source: " << src << std::endl;
@@ -290,6 +338,7 @@ bool Graph::run()
 		std::cout << energy_array[i] << ", ";
 	}
 	std::cout << energy_array[number_nodes-1] << "]\n";
+	
 	// Kill the sensors without energy
 	if(!CheckEnergy())
 	{
@@ -299,6 +348,7 @@ bool Graph::run()
 	return true;
 }
 
+// Returns the amount of packets sent
 int Graph::GetPacketsSent(){
 	return packet_count-1;
 }
