@@ -1,8 +1,8 @@
-# CPE 400 Project
+# CPE 400 Project (Fall 2019)
 ## Group
-- Benjamin Estela
-- Sidney Inouye
-- Jonathon Hewitt
+- [Benjamin Estela](https://github.com/nebunr)
+- [Sidney Inouye](https://github.com/sinouye)
+- [Jonathon Hewitt](https://github.com/zotlann)
 
 ## Topic (#2)
 **Dynamic routing mechanism design with focus on energy conservation.**
