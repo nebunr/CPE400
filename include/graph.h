@@ -10,6 +10,7 @@
 class Graph{
 	public:
 		Graph(int n);
+		Graph(int n, int** adj, int* e);
 		void AddPath(int a, int b, int cost);
 		int GetCost(int a, int b);
 		int GetEnergy(int a);
@@ -21,7 +22,8 @@ class Graph{
 		bool Travel(int a, int b);
 		bool TravelPath(std::vector<std::pair<int,int>> path);
 		friend std::ostream& operator<<(std::ostream& os, Graph g);
-		bool run();
+		bool runRIP();
+		bool runRIPBFS();
 		bool CheckEnergy();
 		int GetPacketsSent();
 

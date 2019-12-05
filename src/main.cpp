@@ -1,31 +1,38 @@
 #include <iostream>
 #include "graph.h"
 
-int test();
+std::pair<int,int> test();
 
 int main()
 {
 	// Seed randomness
 	srand(time(NULL));
+	
+	//Declare and initialize
+	int sumrip = 0;
+	int sumripbfs = 0;
+	int num_tests = 1000;
 
-	// Declarations and initializers
-	int sum = 0;
-	int num_tests = 1;
-
-	// Run simulation as num_test amount of tests
+	// Run the tests num_tests amount of times
 	for(int i = 0; i < num_tests; i++){
-		sum += test();
+		std::pair<int,int> test_result = test();
+		if(test_result.first > 0){ std::cout << "RIP SUCCEEDED" << std::endl; return 0;}
+		sumrip += test_result.first;
+		sumripbfs += test_result.second;	
 	}
 
-	// Print out the average amount of packets sent
-	std::cout << "Average Packets Sent: "<< (float)sum/(float)num_tests << std::endl;
+	// Print out how many packets were sent using the standard rip protocol and the modified
+	// rip protocol
+	std::cout << "Average packets sent using RIP: " << (float)sumrip/(float)num_tests << std::endl;
+	std::cout << "Average packets sent using RIPBFS: " << (float)sumripbfs/(float)num_tests << std::endl;
 }
 
-// Runs the simulation 1 time
-int test(){
-	// Declaration and initializes
+// The test function
+std::pair<int,int> test(){
+	// Declare and initialize
 	int number_nodes = 20;
-	Graph g(number_nodes);
+	// Make a graph for running rip
+	Graph grip(number_nodes);
 
 	// Make random network each time
 	for(int i = 0; i < number_nodes; i++)
@@ -40,22 +47,27 @@ int test(){
 
 			// Make sure that the new link makes a path
 			// Also make sure that there doesn't already exist a path
-			while(newLink == i && (g.GetCost(i, newLink) != -1))
+			while(newLink == i && (grip.GetCost(i, newLink) != -1))
 			{
 				newLink = rand() % (number_nodes-1);
 			}
 
-			// Add random path to the graph
-			// Make sure its symmetrical as the graph is undirected
-			g.AddPath(i, newLink, cost);
-			g.AddPath(newLink, i, cost);
+			// Add paths to make an undirected graph
+			// Make sure the graph is symmetrical
+			grip.AddPath(i, newLink, cost);
+			grip.AddPath(newLink, i, cost);
 		}
 	}
 
-	// Print out the graph
-	std::cout << g;
-	// Run simulation for as long as the network is alive
-	while(g.run()){ }
-	// Return how many packets were sent while network was alive
-	return g.GetPacketsSent();
+	// Create the same graph to run ripbfs
+	Graph gripbfs(grip.GetNumberNodes(),grip.GetAdjacencyMatrix(),grip.GetEnergyArray());
+	
+	// Run the two simulations
+	while(grip.runRIP()){ }
+	while(gripbfs.runRIPBFS()){ }
+
+	// Return the packets sent by both simulations
+	return std::make_pair(grip.GetPacketsSent(),gripbfs.GetPacketsSent());
+
+
 }

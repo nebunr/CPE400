@@ -30,6 +30,36 @@ Graph::Graph(int n){
 	packet_count = 1;	
 }
 
+Graph::Graph(int n, int** adj, int* e){
+	//set number_nodes to n
+	number_nodes = n;
+	//allocate memory for energy_array
+	energy_array = new int[number_nodes];
+	//allocate memory for shortestPath matrix
+	shortestPath = new std::vector<std::pair<int,int>>*[number_nodes];
+	for(int i = 0; i < number_nodes; i++)
+	{
+		shortestPath[i] = new std::vector<std::pair<int,int>>[number_nodes];
+	}
+	//allocate memory for adjacency matrix
+	adjacency_matrix = new int*[number_nodes];
+	for(int i = 0; i < number_nodes; i++){
+		adjacency_matrix[i] = new int[number_nodes];
+	}
+	//initialize adjacency matrix to -1 to indicate no path exists
+	for(int i = 0; i < number_nodes; i++){
+		for(int j = 0; j < number_nodes; j++){
+			adjacency_matrix[i][j] = adj[i][j];
+		}
+		adjacency_matrix[i][i] = 0;
+	}
+	//initialize the energy matrix, each node has a random energy 10-20
+	for(int i = 0; i < number_nodes; i++){
+		energy_array[i] = e[i];
+	}
+	packet_count = 1;	
+}
+
 //Add a path from a to b with a cost
 void Graph::AddPath(int a, int b, int cost){
 	if((a > number_nodes - 1) || (b > number_nodes - 1)){
@@ -130,8 +160,10 @@ bool Graph::RIP(int src, int dest)
 
 	// Declaration and initializiation
 	int MAX_HOPS = 15;
+	int MAX_TRIES = 1000000;
 	int dist[number_nodes];
 	int j = 0;
+	int k =0;
 	int currentNode = src;
 
 	// Set up the dist array for Bellman-Ford algorithm
@@ -141,8 +173,8 @@ bool Graph::RIP(int src, int dest)
 	}
 	dist[src] = 0;
 
-	// Do MAX_HOPS amount of hops before continuing
-	while(j < MAX_HOPS)
+	// try to reach destination
+	while(j < MAX_HOPS && k < MAX_TRIES)
 	{
 		// Loop through rows of adjacency_matrix
 		for(int i = 0; i < number_nodes; i++)
@@ -172,6 +204,7 @@ bool Graph::RIP(int src, int dest)
 				currentNode = i;
 			}
 		}
+		k++;
 	}
 
 	// Check if a solution was found. If not, return false
@@ -285,8 +318,8 @@ bool Graph::CheckEnergy()
 	return notDone;
 }
 
-// run the simulation
-bool Graph::run()
+// run the simulation for rip protocol
+bool Graph::runRIP()
 {
 	// Randomly generate src and dest
 	int src = rand() % number_nodes;
@@ -318,11 +351,71 @@ bool Graph::run()
 	}
 	else
 	{
-		// If the RIPBFS failed, there isn't a path that exists from a to b
+		//std::cout << "No path from a to b." << std::endl;
+		return false;
+	}
+
+	/*
+	std::cout << "Packet: " << packet_count << std::endl;
+	packet_count++;
+	std::cout << "Source: " << src << std::endl;
+	std::cout << "Destination: " << dest << std::endl;
+	std::cout << "Route taken: " << src << "->";
+	for(unsigned int i = 0; i < shortestPath[src][dest].size()-1; i++)
+	{
+		std::cout << shortestPath[src][dest][i].second << "->";
+	}
+	std::cout << shortestPath[src][dest][shortestPath[src][dest].size()-1].second << std::endl;
+	std::cout << "Energy Array: [";
+	for(int i = 0; i < number_nodes-1; i++){
+		std::cout << energy_array[i] << ", ";
+	}
+	std::cout << energy_array[number_nodes-1] << "]\n";*/
+
+	// Kill the sensors without energy
+	if(!CheckEnergy())
+	{
+		return false;
+	}
+
+	return true;
+}
+
+
+// run the simulation for the modified rip protocol
+bool Graph::runRIPBFS()
+{
+	// randomly generate src and dest
+	int src = rand() % number_nodes;
+	int dest = rand() %  number_nodes;
+
+	// if src is dead, generate another src
+	while(adjacency_matrix[src][src] != 0)
+	{
+		src = rand() % number_nodes;
+	}
+
+	// if dest is the same as src, generate another dest
+	while (src == dest)
+	{
+		dest = rand() % number_nodes;
+	}
+
+	// Look for shortest path using modified rip and travel that
+	if(RIPBFS(src,dest))
+	{
+		if(!TravelPath(shortestPath[src][dest]))
+		{
+			return false;
+		}
+	}
+	else
+	{
 		std::cout << "No path from a to b." << std::endl;
 		return false;
 	}
-	// Print information from the simulation
+	
+	// Print out information regarding the sensors and packets
 	std::cout << "Packet: " << packet_count << std::endl;
 	packet_count++;
 	std::cout << "Source: " << src << std::endl;
